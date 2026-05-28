@@ -1,33 +1,170 @@
-# MonReader-PageFlip-Detection
-A Computer Vision and Deep Learning project focused on detecting page-flipping actions from image sequences to support automated mobile document digitization systems.
-Our company develops innovative Artificial Intelligence and Computer Vision solutions that revolutionize industries. Machines that can see: We pack our solutions in small yet intelligent devices that can be easily integrated to your existing data flow. Computer vision for everyone: Our devices can recognize faces, estimate age and gender, classify clothing types and colors, identify everyday objects and detect motion. Technical consultancy: We help you identify use cases of artificial intelligence and computer vision in your industry. Artificial intelligence is the technology of today, not the future.
+# 📖 MonReader — Page Flip Detection
 
-MonReader is a new mobile document digitization experience for the blind, for researchers and for everyone else in need for fully automatic, highly fast and high-quality document scanning in bulk. It is composed of a mobile app and all the user needs to do is flip pages and everything is handled by MonReader: it detects page flips from low-resolution camera preview and takes a high-resolution picture of the document, recognizing its corners and crops it accordingly, and it dewarps the cropped document to obtain a bird's eye view, sharpens the contrast between the text and the background and finally recognizes the text with formatting kept intact, being further corrected by MonReader's ML powered redactor.
+> A Computer Vision and Deep Learning project for detecting page-flipping actions from image sequences to support automated mobile document digitization.
 
+---
 
+## Table of Contents
 
-MonReader is a new mobile document digitalization experience for the blind, for researchers and for everyone else in need for fully automatic, highly fast and high-quality document scanning in bulk. It is composed of a mobile app and all the user needs to do is flip pages and everything is handled by MonReader: it detects page flips from low-resolution camera preview and takes a high-resolution picture of the document, recognizing its corners and crops it accordingly, and it dewarps the cropped document to obtain a bird's eye view, sharpens the contrast between the text and the background and finally recognizes the text with formatting kept intact, being further corrected by MonReader's ML powered redactor.
+- [Overview](#overview)
+- [About MonReader](#about-monreader)
+- [Problem Statement](#problem-statement)
+- [Dataset](#dataset)
+- [Project Structure](#project-structure)
+- [Methodology](#methodology)
+- [Success Metrics](#success-metrics)
+- [Getting Started](#getting-started)
+- [Requirements](#requirements)
+- [Results](#results)
 
+---
 
+## Overview
 
-Data Description:
+This project tackles the core perception challenge behind **MonReader** — a mobile document digitization system. Specifically, it builds a deep learning model capable of determining whether a page is being flipped in a given image frame. Accurate page-flip detection is the trigger that allows MonReader to capture high-resolution document scans at exactly the right moment.
 
-We collected page flipping video from smart phones and labelled them as flipping and not flipping.
+---
 
-We clipped the videos as short videos and labelled them as flipping or not flipping. The extracted frames are then saved to disk in a sequential order with the following naming structure: VideoID_FrameNumber
+## About MonReader
 
-Download Data:
+MonReader is a mobile document digitization experience designed for the blind, researchers, and anyone who needs fast, fully automatic, high-quality document scanning in bulk.
 
-https://drive.google.com/file/d/1KDQBTbo5deKGCdVV_xIujscn5ImxW4dm/view?usp=sharing
+The full MonReader pipeline:
+1. **Detects page flips** from a low-resolution camera preview
+2. **Captures a high-resolution photo** of the document at the right moment
+3. **Recognizes document corners** and crops the image accordingly
+4. **Dewarps** the cropped document to produce a bird's-eye view
+5. **Sharpens contrast** between text and background
+6. **Recognizes text** with formatting intact, refined by MonReader's ML-powered redactor
 
-Goal(s):
+This repository focuses on **step 1** — the page flip detection model.
 
-Predict if the page is being flipped using a single image.
+---
 
-Success Metrics:
+## Problem Statement
 
-Evaluate model performance based on F1 score, the higher the better.
+**Primary Goal:** Predict whether a page is being flipped using a single image frame.
 
-Current Challenges:
+**Extended Challenge:** Predict whether a given *sequence* of images contains a page-flipping action.
 
-Predict if a given sequence of images contains an action of flipping.
+This is framed as a **binary classification** task:
+- `flipping` — a page flip is in progress
+- `not flipping` — no flip is occurring
+
+---
+
+## Dataset
+
+Page-flipping videos were collected from smartphones and manually labeled as `flipping` or `not flipping`. Each video was clipped into short segments, and individual frames were extracted and saved to disk.
+
+**Frame naming convention:**
+```
+VideoID_FrameNumber
+```
+For example: `video001_0042.jpg`
+
+**Download the dataset:**
+[Google Drive — MonReader Dataset](https://drive.google.com/file/d/1KDQBTbo5deKGCdVV_xIujscn5ImxW4dm/view?usp=sharing)
+
+---
+
+## Project Structure
+
+```
+MonReader-PageFlip-Detection/
+│
+├── MonReader.ipynb       # Main notebook: EDA, modeling, and evaluation
+└── README.md
+```
+
+---
+
+## Methodology
+
+The notebook (`MonReader.ipynb`) walks through the full machine learning pipeline:
+
+1. **Exploratory Data Analysis (EDA)** — visualizing frame samples, class distribution, and data characteristics
+2. **Data Preprocessing** — loading frames, resizing, normalization, and train/validation splitting
+3. **Model Architecture** — a Convolutional Neural Network (CNN) built with deep learning frameworks (e.g., TensorFlow/Keras or PyTorch) for binary image classification
+4. **Training** — model training with appropriate callbacks (early stopping, learning rate scheduling)
+5. **Evaluation** — performance assessed via F1 score on the validation/test set
+6. **Inference** — predicting flip/no-flip on individual frames or sequences
+
+---
+
+## Success Metrics
+
+| Metric | Goal |
+|--------|------|
+| **F1 Score** | Maximize (higher is better) |
+
+F1 score is used as the primary metric because it balances precision and recall — important when both false positives (unnecessary captures) and false negatives (missed page flips) carry real costs.
+
+---
+
+## Getting Started
+
+### 1. Clone the repository
+
+```bash
+git clone https://github.com/Rinalpatel21/MonReader-PageFlip-Detection.git
+cd MonReader-PageFlip-Detection
+```
+
+### 2. Download the dataset
+
+Download the dataset from the link above and place the extracted frames in a local `data/` directory:
+
+```
+data/
+├── flipping/
+│   ├── video001_0001.jpg
+│   └── ...
+└── not_flipping/
+    ├── video002_0001.jpg
+    └── ...
+```
+
+### 3. Launch the notebook
+
+```bash
+jupyter notebook MonReader.ipynb
+```
+
+---
+
+## Requirements
+
+```
+python >= 3.8
+jupyter
+numpy
+pandas
+matplotlib
+scikit-learn
+tensorflow >= 2.x   # or pytorch
+opencv-python
+Pillow
+```
+
+Install all dependencies:
+
+```bash
+pip install numpy pandas matplotlib scikit-learn tensorflow opencv-python Pillow jupyter
+```
+
+---
+
+## Results
+
+> Model performance results and visualizations (confusion matrix, training curves, sample predictions) are available inside `MonReader.ipynb`.
+
+---
+
+## Acknowledgements
+
+This project is built around the MonReader product concept, a mobile document scanning solution designed to make document digitization accessible — particularly for the visually impaired.
+
+---
+
+*Built with Python · Deep Learning · Computer Vision*
