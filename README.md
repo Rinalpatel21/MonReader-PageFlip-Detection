@@ -1,6 +1,6 @@
 # 📖 MonReader — Page Flip Detection
 
-> A Computer Vision and Deep Learning project for detecting page-flipping actions from image sequences to support automated mobile document digitization.
+> A Computer Vision and Deep Learning project for detecting page-flipping actions from image sequences, powering the automated mobile document digitization system MonReader.
 
 ---
 
@@ -11,17 +11,20 @@
 - [Problem Statement](#problem-statement)
 - [Dataset](#dataset)
 - [Project Structure](#project-structure)
-- [Methodology](#methodology)
-- [Success Metrics](#success-metrics)
+- [Approach & Methodology](#approach--methodology)
+  - [Approach 1: Custom CNN (Single Image)](#approach-1-custom-cnn-single-image)
+  - [Approach 2: CNN + LSTM (Sequence Classification)](#approach-2-cnn--lstm-sequence-classification)
+- [Results Summary](#results-summary)
+- [Key Insights](#key-insights)
+- [Recommendations](#recommendations)
 - [Getting Started](#getting-started)
 - [Requirements](#requirements)
-- [Results](#results)
 
 ---
 
 ## Overview
 
-This project tackles the core perception challenge behind **MonReader** — a mobile document digitization system. Specifically, it builds a deep learning model capable of determining whether a page is being flipped in a given image frame. Accurate page-flip detection is the trigger that allows MonReader to capture high-resolution document scans at exactly the right moment.
+This project develops and evaluates deep learning models to detect whether a page is being flipped in smartphone camera footage — the critical first step in MonReader's fully automated document scanning pipeline. Two approaches are explored: a **Custom CNN** for single-image classification, and a **CNN + LSTM** hybrid for sequence-based temporal classification.
 
 ---
 
@@ -29,42 +32,53 @@ This project tackles the core perception challenge behind **MonReader** — a mo
 
 MonReader is a mobile document digitization experience designed for the blind, researchers, and anyone who needs fast, fully automatic, high-quality document scanning in bulk.
 
-The full MonReader pipeline:
-1. **Detects page flips** from a low-resolution camera preview
-2. **Captures a high-resolution photo** of the document at the right moment
-3. **Recognizes document corners** and crops the image accordingly
-4. **Dewarps** the cropped document to produce a bird's-eye view
-5. **Sharpens contrast** between text and background
-6. **Recognizes text** with formatting intact, refined by MonReader's ML-powered redactor
+The complete MonReader pipeline:
 
-This repository focuses on **step 1** — the page flip detection model.
+1. 🔍 **Detects page flips** from low-resolution camera preview ← *this project*
+2. 📷 **Captures a high-resolution photo** at the right moment
+3. ✂️ **Recognizes document corners** and crops accordingly
+4. 🦅 **Dewarps** the cropped document to produce a bird's-eye view
+5. 🔆 **Sharpens contrast** between text and background
+6. 🧠 **Recognizes text** with formatting intact via ML-powered redactor
 
 ---
 
 ## Problem Statement
 
-**Primary Goal:** Predict whether a page is being flipped using a single image frame.
-
-**Extended Challenge:** Predict whether a given *sequence* of images contains a page-flipping action.
-
-This is framed as a **binary classification** task:
-- `flipping` — a page flip is in progress
-- `not flipping` — no flip is occurring
+| | |
+|---|---|
+| **Primary Goal** | Predict whether a page is being flipped using a **single image** |
+| **Extended Challenge** | Predict whether a **sequence of images** contains a page flip |
+| **Task Type** | Binary Classification: `flip` vs `notflip` |
+| **Success Metric** | **F1 Score** (higher is better) |
 
 ---
 
 ## Dataset
 
-Page-flipping videos were collected from smartphones and manually labeled as `flipping` or `not flipping`. Each video was clipped into short segments, and individual frames were extracted and saved to disk.
+Page-flipping videos were collected from smartphones and manually labeled as `flipping` or `not flipping`. Videos were clipped into short segments and individual frames extracted to disk.
 
 **Frame naming convention:**
 ```
 VideoID_FrameNumber
 ```
-For example: `video001_0042.jpg`
 
-**Download the dataset:**
-[Google Drive — MonReader Dataset](https://drive.google.com/file/d/1KDQBTbo5deKGCdVV_xIujscn5ImxW4dm/view?usp=sharing)
+### Dataset Statistics
+
+| Split | `notflip` | `flip` | Total |
+|-------|-----------|--------|-------|
+| Training | 1,230 | 1,162 | **2,392** |
+| Testing | 307 | 290 | **597** |
+
+**Original image dimensions:** 1080 × 1920 px (RGB)
+
+**Preprocessing:**
+- Resized to `224 × 224` for the Custom CNN
+- Resized to `96 × 96` per frame for CNN + LSTM sequences
+- Pixel values normalized to `[0, 1]`
+- Split into training, validation, and testing sets
+
+📥 **[Download the Dataset](https://drive.google.com/file/d/1KDQBTbo5deKGCdVV_xIujscn5ImxW4dm/view?usp=sharing)**
 
 ---
 
@@ -73,32 +87,126 @@ For example: `video001_0042.jpg`
 ```
 MonReader-PageFlip-Detection/
 │
-├── MonReader.ipynb       # Main notebook: EDA, modeling, and evaluation
+├── MonReader.ipynb       # Full pipeline: EDA, modeling, evaluation, interpretability
 └── README.md
 ```
 
 ---
 
-## Methodology
+## Approach & Methodology
 
-The notebook (`MonReader.ipynb`) walks through the full machine learning pipeline:
+### Approach 1: Custom CNN (Single Image)
 
-1. **Exploratory Data Analysis (EDA)** — visualizing frame samples, class distribution, and data characteristics
-2. **Data Preprocessing** — loading frames, resizing, normalization, and train/validation splitting
-3. **Model Architecture** — a Convolutional Neural Network (CNN) built with deep learning frameworks (e.g., TensorFlow/Keras or PyTorch) for binary image classification
-4. **Training** — model training with appropriate callbacks (early stopping, learning rate scheduling)
-5. **Evaluation** — performance assessed via F1 score on the validation/test set
-6. **Inference** — predicting flip/no-flip on individual frames or sequences
+A Sequential CNN was built from scratch to classify individual frames.
+
+**Architecture:**
+```
+Input (224×224×3)
+→ Conv2D (64 filters, 3×3, ReLU)
+→ MaxPooling2D
+→ BatchNormalization
+→ Dropout
+→ Conv2D (64 filters, 3×3, ReLU)
+→ MaxPooling2D
+→ BatchNormalization
+→ Dropout
+→ Flatten
+→ Dense (64 units, ReLU)
+→ Dense (1 unit, Sigmoid)
+```
+
+**Compiler:** Adam optimizer, Binary Crossentropy loss
+
+**Initial Results:**
+
+| Metric | Score |
+|--------|-------|
+| Test Accuracy | **95.31%** |
+| F1 Score | **0.9510** |
+
+**Saliency Map Analysis:**
+
+Despite the high accuracy, saliency maps revealed a critical problem — the model was not learning page motion at all. Instead, it learned a **spurious correlation**: it associated the *presence of hands/wrists* with the `notflip` class as a shortcut, rather than focusing on page edges or motion blur. This is a classic example of a model achieving high accuracy for the wrong reasons.
+
+**Impact of Data Augmentation:**
+
+When retrained with data augmentation to break the spurious correlation, performance collapsed to ~50% accuracy (random chance). This confirmed the model's over-reliance on the hand-detection shortcut and inability to learn robust features without it.
+
+**Conclusion:** High accuracy masked a fundamental flaw. Interpretability was essential to catching it.
 
 ---
 
-## Success Metrics
+### Approach 2: CNN + LSTM (Sequence Classification)
 
-| Metric | Goal |
-|--------|------|
-| **F1 Score** | Maximize (higher is better) |
+To address the shortcomings of the static CNN, a temporal model was developed that processes **sequences of 3 consecutive frames** to learn motion over time.
 
-F1 score is used as the primary metric because it balances precision and recall — important when both false positives (unnecessary captures) and false negatives (missed page flips) carry real costs.
+**Why this architecture?**
+
+- A page flip is defined by *motion across time*, not any single static frame
+- A CNN alone cannot understand temporal change
+- The `TimeDistributed` wrapper applies the same CNN to every frame in a sequence, producing a series of feature vectors
+- The `LSTM` then learns how those features evolve across frames, capturing the dynamics of a flip
+
+**Architecture:**
+```
+Input: Sequence of 3 frames (96×96×3 each)
+→ TimeDistributed(MobileNetV2)   ← pre-trained, frozen feature extractor
+→ LSTM layer
+→ Dropout
+→ Dense (1 unit, Sigmoid)
+```
+
+**Key design choices:**
+- **MobileNetV2** used as the base CNN for its efficiency and strong pre-trained visual features (`trainable=False`)
+- **Sequence length = 3** frames per input
+- **LSTM** captures temporal dependencies between consecutive frames
+
+**Results:**
+
+| Metric | Score |
+|--------|-------|
+| Test Accuracy | **99.73%** |
+| F1 Score | **0.9970** |
+
+Saliency maps for this model are expected to reflect genuine motion cues (page edges, blur, content transitions) rather than static hand presence, consistent with its dramatically higher performance and robustness.
+
+---
+
+## Results Summary
+
+| Model | Accuracy | F1 Score | Flaw |
+|-------|----------|----------|------|
+| Custom CNN (baseline) | 95.31% | 0.9510 | Spurious correlation (hand detection) |
+| Custom CNN + Augmentation | ~50% | — | Collapsed without shortcut |
+| **CNN + LSTM (MobileNetV2)** | **99.73%** | **0.9970** | ✅ None identified |
+
+---
+
+## Key Insights
+
+1. **Temporal context is critical.** Page flipping is a motion event. Models that process single static frames are fundamentally limited and prone to learning shortcuts rather than actual page dynamics.
+
+2. **Interpretability can be as important as accuracy.** The Custom CNN's 95% accuracy looked great on paper, but saliency maps revealed it was useless for the real task. High accuracy alone is not sufficient validation.
+
+3. **Spurious correlations are dangerous.** The CNN learned that "hand present = not flipping" — a pattern that would completely break down in real-world conditions where hands appear in both classes.
+
+4. **Transfer learning accelerates robustness.** Using a pre-trained MobileNetV2 as a frozen feature extractor gave the LSTM high-quality visual representations from the start, without needing to learn low-level features from scratch on a small dataset.
+
+5. **Augmentation is not a silver bullet.** Adding augmentation without first addressing the root cause of spurious learning can confuse a model that depends on a shortcut, rather than teaching it the right features.
+
+---
+
+## Recommendations
+
+1. **Saliency maps for CNN+LSTM:** Perform detailed saliency analysis on the sequence model to visually confirm it focuses on page edges, motion blur, and inter-frame content change — not hands.
+
+2. **Misclassification analysis:** Inspect the small number of misclassified sequences (false positives and negatives) to identify edge cases, labeling issues, or weak spots in the model's temporal understanding.
+
+3. **Real-world testing:** Deploy the CNN+LSTM in a simulated MonReader environment across diverse lighting conditions, hand positions, and page/book types.
+
+4. **Optimize sequence length:** Experiment with longer sequences (e.g., 5 or 7 frames) to determine if more temporal context improves robustness without significantly increasing compute cost.
+
+5. **Fine-tune MobileNetV2:** Consider unfreezing the top layers of MobileNetV2 and fine-tuning end-to-end to potentially squeeze further performance gains.
 
 ---
 
@@ -111,18 +219,18 @@ git clone https://github.com/Rinalpatel21/MonReader-PageFlip-Detection.git
 cd MonReader-PageFlip-Detection
 ```
 
-### 2. Download the dataset
+### 2. Download and extract the dataset
 
-Download the dataset from the link above and place the extracted frames in a local `data/` directory:
+Download from the link above and organize as:
 
 ```
 data/
-├── flipping/
-│   ├── video001_0001.jpg
-│   └── ...
-└── not_flipping/
-    ├── video002_0001.jpg
-    └── ...
+├── training/
+│   ├── flip/
+│   └── notflip/
+└── testing/
+    ├── flip/
+    └── notflip/
 ```
 
 ### 3. Launch the notebook
@@ -142,7 +250,7 @@ numpy
 pandas
 matplotlib
 scikit-learn
-tensorflow >= 2.x   # or pytorch
+tensorflow >= 2.x
 opencv-python
 Pillow
 ```
@@ -155,16 +263,4 @@ pip install numpy pandas matplotlib scikit-learn tensorflow opencv-python Pillow
 
 ---
 
-## Results
-
-> Model performance results and visualizations (confusion matrix, training curves, sample predictions) are available inside `MonReader.ipynb`.
-
----
-
-## Acknowledgements
-
-This project is built around the MonReader product concept, a mobile document scanning solution designed to make document digitization accessible — particularly for the visually impaired.
-
----
-
-*Built with Python · Deep Learning · Computer Vision*
+*Built with Python · TensorFlow · MobileNetV2 · LSTM · Computer Vision · Interpretable AI*
