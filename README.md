@@ -106,6 +106,8 @@ Input (224×224×3)
 **Saliency Map Analysis:**
 
 Despite the high accuracy, saliency maps revealed a critical problem — the model was not learning page motion at all. Instead, it learned a **spurious correlation**: it associated the *presence of hands/wrists* with the `notflip` class as a shortcut, rather than focusing on page edges or motion blur. This is a classic example of a model achieving high accuracy for the wrong reasons.
+<img width="1048" height="330" alt="image" src="https://github.com/user-attachments/assets/65354722-447e-462f-b49b-a39eee767710" />
+
 
 **Impact of Data Augmentation:**
 
@@ -147,7 +149,10 @@ Input: Sequence of 3 frames (96×96×3 each)
 | Test Accuracy | **99.73%** |
 | F1 Score | **0.9970** |
 
+**Saliency Map Analysis:**
 Saliency maps for this model are expected to reflect genuine motion cues (page edges, blur, content transitions) rather than static hand presence, consistent with its dramatically higher performance and robustness.
+<img width="1058" height="334" alt="image" src="https://github.com/user-attachments/assets/34821baa-e8f8-4ac9-b532-51de30634386" />
+
 
 ---
 
