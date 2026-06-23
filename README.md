@@ -65,7 +65,7 @@ The dataset consists of images extracted from page-flipping videos, labeled as `
 |-------|-----------|--------|-------|
 | Training | 1,230 | 1,162 | **2,392** |
 | Testing | 307 | 290 | **597** |
-
+<img width="1051" height="484" alt="image" src="https://github.com/user-attachments/assets/29ec75a7-a47a-4c12-8983-02b7b26f818a" />
 ---
 
 ## Approach: Custom CNN
@@ -106,6 +106,7 @@ Despite the near-perfect accuracy, **saliency map analysis** revealed a critical
 > The model was primarily focusing on the presence of **hands and wrists** — particularly in the `notflip` class — rather than understanding the actual visual cues of a page flip in motion.
 
 This is a spurious correlation, not genuine motion understanding. The model was likely overfitting to an artifact in the dataset rather than learning generalizable, page-motion-related features — meaning the headline accuracy score was misleading about true real-world readiness.
+<img width="813" height="538" alt="image" src="https://github.com/user-attachments/assets/e1b0b31f-929f-4677-a733-b17e312cfa81" />
 
 ---
 
