@@ -1,4 +1,4 @@
-# 📖 MonReader — Page Flip Detection
+# MonReader — Page Flip Detection
 
 > A Computer Vision and Deep Learning project to detect page-flipping actions from images, powering the automated mobile document digitization experience **MonReader**.
 
@@ -10,14 +10,12 @@
 - [About MonReader](#about-monreader)
 - [Project Goal](#project-goal)
 - [Dataset](#dataset)
-- [Project Structure](#project-structure)
 - [Approach: Custom CNN](#approach-custom-cnn)
 - [The Spurious Correlation Problem](#the-spurious-correlation-problem)
 - [Failure of Augmentation](#failure-of-augmentation)
 - [Key Insights](#key-insights)
 - [Recommendations & Next Steps](#recommendations--next-steps)
-- [Getting Started](#getting-started)
-- [Requirements](#requirements)
+
 
 ---
 
@@ -31,12 +29,12 @@ This project focuses on **Page-Flip Detection** for MonReader, a mobile document
 
 MonReader handles the entire document scanning experience — the user simply flips pages, and the app does the rest:
 
-1. 🔍 **Detects page flips** from low-resolution camera preview ← *this project*
-2. 📷 **Captures a high-resolution photo** at the right moment
-3. ✂️ **Recognizes document corners** and crops accordingly
-4. 🦅 **Dewarps** the cropped document into a bird's-eye view
-5. 🔆 **Sharpens contrast** between text and background
-6. 🧠 **Recognizes text** with formatting intact, refined by an ML-powered redactor
+1. **Detects page flips** from low-resolution camera preview ← *this project*
+2. **Captures a high-resolution photo** at the right moment
+3. **Recognizes document corners** and crops accordingly
+4. **Dewarps** the cropped document into a bird's-eye view
+5. **Sharpens contrast** between text and background
+6. **Recognizes text** with formatting intact, refined by an ML-powered redactor
 
 ---
 
@@ -67,19 +65,6 @@ The dataset consists of images extracted from page-flipping videos, labeled as `
 |-------|-----------|--------|-------|
 | Training | 1,230 | 1,162 | **2,392** |
 | Testing | 307 | 290 | **597** |
-
-📥 **[Download the Dataset](https://drive.google.com/file/d/1KDQBTbo5deKGCdVV_xIujscn5ImxW4dm/view?usp=sharing)**
-
----
-
-## Project Structure
-
-```
-MonReader-PageFlip-Detection/
-│
-├── MonReader.ipynb       # EDA, model building, training, evaluation, interpretability
-└── README.md
-```
 
 ---
 
@@ -120,13 +105,13 @@ Despite the near-perfect accuracy, **saliency map analysis** revealed a critical
 
 > The model was primarily focusing on the presence of **hands and wrists** — particularly in the `notflip` class — rather than understanding the actual visual cues of a page flip in motion.
 
-In effect, the model learned a shortcut: **"hand present = notflip."** This is a spurious correlation, not genuine motion understanding. The model was likely overfitting to an artifact in the dataset rather than learning generalizable, page-motion-related features — meaning the headline accuracy score was misleading about true real-world readiness.
+This is a spurious correlation, not genuine motion understanding. The model was likely overfitting to an artifact in the dataset rather than learning generalizable, page-motion-related features — meaning the headline accuracy score was misleading about true real-world readiness.
 
 ---
 
 ## Failure of Augmentation
 
-To address the spurious correlation, the Custom CNN was retrained with additional **BatchNormalization** and **Dropout** layers, using adjusted, less aggressive data augmentation (rotation, shift, brightness, zoom, shear).
+The Custom CNN was retrained with additional **BatchNormalization** and **Dropout** layers, using adjusted, less aggressive data augmentation (rotation, shift, brightness, zoom, shear).
 
 **Result:** The model failed to learn effectively, performing **no better than random chance**.
 
@@ -165,10 +150,6 @@ This failure suggests one of two things:
 - Continue using **Grad-CAM** and explore **LIME** to monitor what the model focuses on across new architectures and augmentations.
 - Generate **adversarial examples** to probe and identify features the model incorrectly relies upon.
 
-### 4. Model Architecture Exploration
-- **Transfer learning:** Leverage pre-trained models (e.g., MobileNetV2, ResNet) as feature extractors — these carry rich hierarchical visual features that may generalize better than a CNN trained from scratch on a limited dataset.
-- **Custom architectures:** If staying with a custom CNN, consider deeper/wider networks or attention mechanisms and residual connections to improve learning capacity.
-
 ### 5. Dataset Expansion & Curation
 - **Diversity:** Source or generate data that explicitly breaks the spurious correlation — e.g., `notflip` images without hands, `flip` images with varied hand placements.
 - **Annotation refinement:** Review existing labels for ambiguity, especially around borderline flip/notflip cases.
@@ -177,54 +158,6 @@ This failure suggests one of two things:
 
 ---
 
-## Getting Started
-
-### 1. Clone the repository
-
-```bash
-git clone https://github.com/Rinalpatel21/MonReader-PageFlip-Detection.git
-cd MonReader-PageFlip-Detection
-```
-
-### 2. Download and extract the dataset
-
-```
-data/
-├── training/
-│   ├── flip/
-│   └── notflip/
-└── testing/
-    ├── flip/
-    └── notflip/
-```
-
-### 3. Launch the notebook
-
-```bash
-jupyter notebook MonReader.ipynb
-```
-
----
-
-## Requirements
-
-```
-python >= 3.8
-jupyter
-numpy
-pandas
-matplotlib
-scikit-learn
-tensorflow >= 2.x
-opencv-python
-Pillow
-```
-
-Install all dependencies:
-
-```bash
-pip install numpy pandas matplotlib scikit-learn tensorflow opencv-python Pillow jupyter
-```
 
 ---
 
